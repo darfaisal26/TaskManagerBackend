@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -20,6 +20,8 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("user") // admin or user
+  resetToken       String?   @db.VarChar(255)
+  resetTokenExpiry DateTime?
   tasks     Task[]   @relation("AssignedTasks")
 }
 
