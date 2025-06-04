@@ -1,6 +1,6 @@
 const prisma = require("../prisma/client");
 
-exports.createTask = async ({
+const createTask = async ({
   title,
   description,
   assignedToId,
@@ -18,7 +18,8 @@ exports.createTask = async ({
   });
 };
 
-exports.getTasksByUserId = async (userId, page, limit) => {
+// with pagination
+const getTasksByUserId = async (userId, page, limit) => {
   const skip = (page - 1) * limit;
 
   const [tasks, total] = await Promise.all([
@@ -36,15 +37,16 @@ exports.getTasksByUserId = async (userId, page, limit) => {
   return { tasks, total };
 };
 
-
-exports.getAllTasksByUserId = async (userId) => {
+// without pagination
+const getAllTasksByUserId = async (userId) => {
   return await prisma.task.findMany({
     where: { assignedToId: userId },
     orderBy: { createdAt: "desc" },
   });
 };
 
-exports.getAllTasks = async (page, limit) => {
+// with pagination
+const getAllTasks = async (page, limit) => {
   const skip = (page - 1) * limit;
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
@@ -58,15 +60,15 @@ exports.getAllTasks = async (page, limit) => {
 
   return { tasks, total };
 };
-
-exports.getAllTasksNoPagination = async () => {
+// without pagination
+const getAllTasksNoPagination = async () => {
   return await prisma.task.findMany({
     orderBy: { createdAt: "desc" },
     include: { assignedTo: true },
   });
 };
 
-exports.getTasksByPriority = async (priority) => {
+const getTasksByPriority = async (priority) => {
   return await prisma.task.findMany({
     where: {
       priority: priority,
@@ -78,4 +80,13 @@ exports.getTasksByPriority = async (priority) => {
       assignedTo: true,
     },
   });
+};
+
+module.exports = {
+  createTask,
+  getAllTasks,
+  getAllTasksByUserId,
+  getTasksByUserId,
+  getAllTasksNoPagination,
+  getTasksByPriority,
 };
