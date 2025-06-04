@@ -36,7 +36,7 @@ exports.getTasksByUserId = async (userId, page, limit) => {
   return { tasks, total };
 };
 
-// Fetch all tasks for a user - no pagination
+
 exports.getAllTasksByUserId = async (userId) => {
   return await prisma.task.findMany({
     where: { assignedToId: userId },
@@ -44,10 +44,8 @@ exports.getAllTasksByUserId = async (userId) => {
   });
 };
 
-// Paginated all tasks for admins
 exports.getAllTasks = async (page, limit) => {
   const skip = (page - 1) * limit;
-
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
       skip,
@@ -61,7 +59,6 @@ exports.getAllTasks = async (page, limit) => {
   return { tasks, total };
 };
 
-// Fetch all tasks for admins - no pagination
 exports.getAllTasksNoPagination = async () => {
   return await prisma.task.findMany({
     orderBy: { createdAt: "desc" },
@@ -69,4 +66,16 @@ exports.getAllTasksNoPagination = async () => {
   });
 };
 
-
+exports.getTasksByPriority = async (priority) => {
+  return await prisma.task.findMany({
+    where: {
+      priority: priority,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      assignedTo: true,
+    },
+  });
+};

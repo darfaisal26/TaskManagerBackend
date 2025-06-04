@@ -13,4 +13,6 @@ router.get(
   taskController.getAllTasks
 );
 
+router.get("/by-priority", isAuthenticated, taskController.getTasksByPriority);
+
 module.exports = router;
