@@ -17,6 +17,7 @@ exports.login = async (req, res) => {
     const token = await authService.loginUser(req.body);
     res.json({ token });
   } catch (err) {
+    console.log(err, "in login");
     res.status(400).json({ error: err.message });
   }
 };
