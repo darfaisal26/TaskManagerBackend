@@ -1,20 +1,39 @@
-const prisma = require('../prisma/client');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const prisma = require("../prisma/client");
+const jwt = require("jsonwebtoken");
 
-exports.registerUser = async ({ name, email, password }) => {
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { name, email, password: hashed }
+const registerUser = async ({ name, email, password, role = "user" }) => {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    throw new Error("User with this email already exists");
+  }
+
+  const roleRecord = await prisma.role.findUnique({
+    where: { name: role },
   });
+
+  if (!roleRecord) {
+    throw new Error(`Role '${role}' does not exist`);
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: password,
+      roleId: roleRecord.id,
+    },
+  });
+
   return user;
 };
 
-exports.loginUser = async ({ email, password }) => {
-  // console.log(email, password, "userinfo");
+const loginUser = async ({ email, password }) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("Invalid credentials");
+  if (!user) throw new Error("user with this email does not exist");
 
+  if (user.password !== password) {
+    throw new Error("Password does not match");
+  }
   // const valid = await bcrypt.compare(password, user.password);
   // console.log(valid, "valid");
   // if (!valid) throw new Error("Invalid credentials");
@@ -26,3 +45,5 @@ exports.loginUser = async ({ email, password }) => {
   );
   return token;
 };
+
+module.exports = { registerUser, loginUser };

@@ -1,24 +1,19 @@
-const e = require("express");
 const taskService = require("../services/taskService");
 const { createTaskSchema } = require("../validators/taskValidator");
+const { formatZodError } = require("../utils/formattedError");
 
-exports.createTask = async (req, res) => {
+const createTask = async (req, res) => {
   try {
     // const { title, description, assignedToId, priority, dueDate } = req.body;
+    // console.log("validated", validated);
     const validated = createTaskSchema.parse(req.body);
     const task = await taskService.createTask(validated);
     res.status(201).json(task);
   } catch (err) {
     if (err.name === "ZodError") {
-      console.log(err?.errors, "errors");
-      const formattedErrors = err.errors.map((e) => ({
-        field: e.path.join("."),
-        message: e.message,
-      }));
-
       return res.status(400).json({
         error: "Validation error",
-        errors: formattedErrors,
+        errors: formatZodError(err),
       });
     }
     console.error("Error creating task:", err);
@@ -26,7 +21,7 @@ exports.createTask = async (req, res) => {
   }
 };
 
-exports.getMyTasks = async (req, res) => {
+const getMyTasks = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { page, limit } = req.query;
@@ -61,7 +56,7 @@ exports.getMyTasks = async (req, res) => {
   }
 };
 
-exports.getAllTasks = async (req, res) => {
+const getAllTasks = async (req, res) => {
   try {
     const { page, limit } = req.query;
 
@@ -91,7 +86,7 @@ exports.getAllTasks = async (req, res) => {
   }
 };
 
-exports.getTasksByPriority = async (req, res) => {
+const getTasksByPriority = async (req, res) => {
   try {
     const { priority } = req.query;
     console.log(priority, "priorty");
@@ -107,3 +102,5 @@ exports.getTasksByPriority = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch tasks by priority." });
   }
 };
+
+module.exports = { createTask, getMyTasks, getAllTasks, getTasksByPriority };
