@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -14,23 +10,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  critical
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("user") // admin or user
-  resetToken       String?   @db.VarChar(255)
+  id               Int      @id @default(autoincrement())
+  name             String
+  email            String   @unique
+  password         String
+  role             String   @default("user")
+  resetToken       String?  @db.VarChar(255)
   resetTokenExpiry DateTime?
-  tasks     Task[]   @relation("AssignedTasks")
+  tasks            Task[]   @relation("AssignedTasks")
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  status      String   @default("pending")
-  assignedTo  User     @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  assignedToId Int
-  createdAt   DateTime @default(now())
+  id            Int          @id @default(autoincrement())
+  title         String
+  description   String
+  status        TaskStatus   @default(pending)
+  priority      TaskPriority @default(medium)
+  dueDate       DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  assignedTo    User         @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  assignedToId  Int
 }
+
