@@ -1,10 +1,11 @@
 const prisma = require("../prisma/client");
 const jwt = require("jsonwebtoken");
+const AppError = require("../utils/AppError");
 
 const registerUser = async ({ name, email, password, role = "user" }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    throw new Error("User with this email already exists");
+    throw new AppError("User with this email already exists", 409);
   }
 
   const roleRecord = await prisma.role.findUnique({
@@ -12,7 +13,7 @@ const registerUser = async ({ name, email, password, role = "user" }) => {
   });
 
   if (!roleRecord) {
-    throw new Error(`Role '${role}' does not exist`);
+    throw new AppError(`Role '${role}' does not exist`, 400);
   }
 
   const user = await prisma.user.create({
@@ -29,14 +30,11 @@ const registerUser = async ({ name, email, password, role = "user" }) => {
 
 const loginUser = async ({ email, password }) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("user with this email does not exist");
+  if (!user) throw new AppError("user with this email does not exist", 400);
 
   if (user.password !== password) {
-    throw new Error("Password does not match");
+    throw new AppError("Password does not match", 401);
   }
-  // const valid = await bcrypt.compare(password, user.password);
-  // console.log(valid, "valid");
-  // if (!valid) throw new Error("Invalid credentials");
 
   const token = jwt.sign(
     { userId: user.id, role: user.role },
