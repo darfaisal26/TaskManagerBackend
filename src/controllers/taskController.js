@@ -1,19 +1,26 @@
+const e = require("express");
 const taskService = require("../services/taskService");
+const { createTaskSchema } = require("../validators/taskValidator");
 
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, assignedToId, priority, dueDate } = req.body;
-
-    const task = await taskService.createTask({
-      title,
-      description,
-      assignedToId,
-      priority: priority || "medium",
-      dueDate: dueDate ? new Date(dueDate) : null,
-    });
-
+    // const { title, description, assignedToId, priority, dueDate } = req.body;
+    const validated = createTaskSchema.parse(req.body);
+    const task = await taskService.createTask(validated);
     res.status(201).json(task);
   } catch (err) {
+    if (err.name === "ZodError") {
+      console.log(err?.errors, "errors");
+      const formattedErrors = err.errors.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+
+      return res.status(400).json({
+        error: "Validation error",
+        errors: formattedErrors,
+      });
+    }
     console.error("Error creating task:", err);
     res.status(500).json({ error: "Something went wrong" });
   }
@@ -25,7 +32,6 @@ exports.getMyTasks = async (req, res) => {
     const { page, limit } = req.query;
 
     if (!page && !limit) {
-      // Return all tasks (no pagination)
       const tasks = await taskService.getAllTasksByUserId(userId);
       return res.json({
         totalItems: tasks.length,
@@ -33,7 +39,6 @@ exports.getMyTasks = async (req, res) => {
       });
     }
 
-    // Parse pagination params with defaults
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
 
@@ -86,8 +91,19 @@ exports.getAllTasks = async (req, res) => {
   }
 };
 
+exports.getTasksByPriority = async (req, res) => {
+  try {
+    const { priority } = req.query;
+    console.log(priority, "priorty");
+    if (!priority) {
+      return res.status(400).json({ error: "Priority is required in query." });
+    }
 
+    const tasks = await taskService.getTasksByPriority(priority.toLowerCase());
 
-
-
-
+    res.json({ priority, count: tasks.length, tasks });
+  } catch (err) {
+    console.error("Error fetching tasks by priority:", err);
+    res.status(500).json({ error: "Failed to fetch tasks by priority." });
+  }
+};
