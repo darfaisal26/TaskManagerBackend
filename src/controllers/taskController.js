@@ -1,12 +1,29 @@
 const taskService = require("../services/taskService");
+const asyncHandler = require("express-async-handler");
 const AppError = require("../utils/AppError");
 const { createTaskSchema } = require("../validators/taskValidator");
-const asyncHandler = require("express-async-handler");
 
-const createTask = asyncHandler(async (req, res) => {
-  const validated = createTaskSchema.parse(req.body);
-  const task = await taskService.createTask(validated);
-  res.status(201).json(task);
+const createOrUpdateTask = asyncHandler(async (req, res) => {
+  const validated = createTaskSchema.parse(req.body); // can also use update schema if different
+
+  // Check for ID to determine create or update
+  const taskId = validated.id;
+
+  let task;
+
+  if (taskId) {
+    task = await taskService.updateTask(taskId, validated);
+    return res.status(200).json({
+      message: "Task updated successfully.",
+      task,
+    });
+  }
+
+  task = await taskService.createTask(validated);
+  res.status(201).json({
+    message: "Task created successfully.",
+    task,
+  });
 });
 
 const getMyTasks = asyncHandler(async (req, res) => {
@@ -37,11 +54,6 @@ const getMyTasks = asyncHandler(async (req, res) => {
     totalItems: total,
     tasks,
   });
-  // try {
-  // } catch (err) {
-  //   console.error("Error fetching tasks:", err);
-  //   res.status(500).json({ error: "Failed to fetch tasks" });
-  // }
 });
 
 const getAllTasks = asyncHandler(async (req, res) => {
@@ -67,11 +79,6 @@ const getAllTasks = asyncHandler(async (req, res) => {
     totalItems: total,
     tasks,
   });
-  // try {
-  // } catch (err) {
-  //   console.error("Error fetching all tasks:", err);
-  //   res.status(500).json({ error: "Internal server error" });
-  // }
 });
 
 const getTasksByPriority = asyncHandler(async (req, res) => {
@@ -82,11 +89,11 @@ const getTasksByPriority = asyncHandler(async (req, res) => {
 
   const tasks = await taskService.getTasksByPriority(priority.toLowerCase());
   res.json({ priority, count: tasks.length, tasks });
-  // try {
-  // } catch (err) {
-  //   console.error("Error fetching tasks by priority:", err);
-  //   res.status(500).json({ error: "Failed to fetch tasks by priority." });
-  // }
 });
 
-module.exports = { createTask, getMyTasks, getAllTasks, getTasksByPriority };
+module.exports = {
+  createOrUpdateTask,
+  getMyTasks,
+  getAllTasks,
+  getTasksByPriority,
+};
