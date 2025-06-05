@@ -18,6 +18,16 @@ const createTask = async ({
   });
 };
 
+
+const updateTask = async (id, data) => {
+  const updated = await prisma.task.update({
+    where: { id },
+    data,
+  });
+  if (!updated) throw new AppError("Task not found", 404);
+  return updated;
+};
+
 // with pagination
 const getTasksByUserId = async (userId, page, limit) => {
   const skip = (page - 1) * limit;
@@ -84,6 +94,7 @@ const getTasksByPriority = async (priority) => {
 
 module.exports = {
   createTask,
+  updateTask,
   getAllTasks,
   getAllTasksByUserId,
   getTasksByUserId,

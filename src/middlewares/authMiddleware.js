@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-exports.isAuthenticated = (req, res, next) => {
+const isAuthenticated = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer "))
@@ -17,14 +17,14 @@ exports.isAuthenticated = (req, res, next) => {
   }
 };
 
-exports.isAdmin = (req, res, next) => {
+const isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
 };
 
-exports.requireRole = (...allowedRoles) => {
+const requireRole = (...allowedRoles) => {
   return (req, res, next) => {
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ error: "Access denied" });
@@ -32,3 +32,7 @@ exports.requireRole = (...allowedRoles) => {
     next();
   };
 };
+
+module.exports = { isAdmin, isAuthenticated, requireRole };
+
+

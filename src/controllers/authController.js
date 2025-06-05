@@ -1,10 +1,9 @@
 const authService = require("../services/authService");
-const { registerSchema, loginSchema } = require("../validators/authValidator");
 const asyncHandler = require("express-async-handler");
+const { registerSchema, loginSchema } = require("../validators/authValidator");
 
 const register = asyncHandler(async (req, res) => {
   const parsed = registerSchema.parse(req.body);
-  // const { name, email, password, role } = parsed;
   const user = await authService.registerUser(parsed);
   const { password, ...userWithoutPassword } = user;
 
